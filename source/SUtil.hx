@@ -6,12 +6,15 @@ import android.stuff.Permissions;
 #end
 import lime.app.Application;
 import openfl.events.UncaughtErrorEvent;
+import openfl.utils.Assets as OpenFlAssets;
 import openfl.Lib;
 import haxe.CallStack.StackItem;
 import haxe.CallStack;
 import haxe.io.Path;
 import sys.FileSystem;
-import sys.io.File;
+/**
+ * author: Saw (M.A. Jigsaw)
+ */
 
 class SUtil
 {
@@ -42,31 +45,28 @@ class SUtil
     {
         #if android
         if (!grantedPermsList.contains(Permissions.READ_EXTERNAL_STORAGE) || !grantedPermsList.contains(Permissions.WRITE_EXTERNAL_STORAGE)) {
-            if (AndroidTools.getSDKversion() > 23 || AndroidTools.getSDKversion() == 23) {
+            if (AndroidTools.sdkVersion > 23 || AndroidTools.sdkVersion == 23) {
                 AndroidTools.requestPermissions([Permissions.READ_EXTERNAL_STORAGE, Permissions.WRITE_EXTERNAL_STORAGE]);
             }  
         }
 
         if (!grantedPermsList.contains(Permissions.READ_EXTERNAL_STORAGE) || !grantedPermsList.contains(Permissions.WRITE_EXTERNAL_STORAGE)) {
-            if (AndroidTools.getSDKversion() > 23 || AndroidTools.getSDKversion() == 23) {
-                SUtil.applicationAlert("Permisos", "Si no le das los permisos el juego no podra correr y tendras que dar los permisos en ajustes" + "\n" + "Toca Ok para cerrar el juego o continuar");
+            if (AndroidTools.sdkVersion > 23 || AndroidTools.sdkVersion == 23) {
+                SUtil.applicationAlert("Permissions", "If you accepted the permisions for storage, good, you can continue, if you not the game can't run without storage permissions please grant them in app settings" + "\n" + "Press Ok To Close The App");
             } else {
-                SUtil.applicationAlert("Permisos", "El juego no puede correr sin el permiso de almacenamiento,porfavor da los permisos en la configuracion del juego" + "\n" + "Toca Ok para cerrar el juego");
+                SUtil.applicationAlert("Permissions", "The Game can't run without storage permissions please grant them in app settings" + "\n" + "Press Ok To Close The App");
             }
         }
-        
+
         if (!FileSystem.exists(sPath + "/" + "." + Application.current.meta.get("file"))){
             FileSystem.createDirectory(sPath + "/" + "." + Application.current.meta.get("file"));
         }
 
         if (!FileSystem.exists(sPath + "/" + "." + Application.current.meta.get("file") + "/files")){
             FileSystem.createDirectory(sPath + "/" + "." + Application.current.meta.get("file") + "/files");
-		#if android
-	        SUtil.applicationAlert("Nota: ", "Carpeta creada!");
-	        #end
         }
 
-	if (!FileSystem.exists(SUtil.getPath() + "log")){
+        if (!FileSystem.exists(SUtil.getPath() + "log")){
             FileSystem.createDirectory(SUtil.getPath() + "log");
         }
 
@@ -74,15 +74,14 @@ class SUtil
             FileSystem.createDirectory(SUtil.getPath() + "system-saves");
         }
 
-
         if (!FileSystem.exists(SUtil.getPath() + "assets")){
-            SUtil.applicationAlert("Instruciones:", "Tienes que copiar assets/assets del apk hacia la carpeta  " + "( aqui " + SUtil.getPath() + " )" + "Si mo tienes Zarchiver, instalalo y activa la opcion de mostrar archivos ocultos en ajustes( en zarchiver toca los 3 puntos,configuracion,administrador de ficheros,mostrar archivos ocultos) para poder ver la carpeta" + "\n" + "Toca ok para cerrar el juego");
-	    flash.system.System.exit(0);
+            SUtil.applicationAlert("Instructions:", "You have to copy assets/assets from apk to your internal storage app directory " + "( here " + SUtil.getPath() + " )" + "if you hadn't have Zarhiver Downloaded, download it and enable the show hidden files option to have the folder visible" + "\n" + "Press Ok To Close The App");
+            flash.system.System.exit(0);
         }
         
         if (!FileSystem.exists(SUtil.getPath() + "mods")){
-            SUtil.applicationAlert("Instruciones:", "Tienes que copiar assets/mods del apk hacia la carpeta " + "( aqui " + SUtil.getPath() + " )" + " Si no tienes Zarchiver, instalalo y activa la opcion de mostrar archivos ocultos en ajustes( en zarchiver toca los 3 puntos,configuracion,administrador de ficheros,mostrar archivos ocultos) para poder ver la carpeta" + "\n" + "Toca Ok para cerrar el juego");
-	    flash.system.System.exit(0);
+            SUtil.applicationAlert("Instructions:", "You have to copy assets/mods from apk to your internal storage app directory " + "( here " + SUtil.getPath() + " )" + "if you hadn't have Zarhiver Downloaded, download it and enable the show hidden files option to have the folder visible" + "\n" + "Press Ok To Close The App");
+            flash.system.System.exit(0);
         }
         #end
     }
@@ -94,23 +93,22 @@ class SUtil
      
     static public function onCrash(e:UncaughtErrorEvent):Void {
         var callStack:Array<StackItem> = CallStack.exceptionStack(true);
-	var dateNow:String = Date.now().toString();
-	dateNow = StringTools.replace(dateNow, " ", "_");
-	dateNow = StringTools.replace(dateNow, ":", "'");
-	var path:String = "log/" + "crash_" + dateNow + ".txt";
+        var dateNow:String = Date.now().toString();
+        dateNow = StringTools.replace(dateNow, " ", "_");
+        dateNow = StringTools.replace(dateNow, ":", "'");
+        var path:String = "log/" + "crash_" + dateNow + ".txt";
+        var errMsg:String = "";
 
-	var errMsg:String = "";
-
-	for (stackItem in callStack)
-	{
-		switch (stackItem)
-		{
-			case FilePos(s, file, line, column):
-				errMsg += file + " (line " + line + ")\n";
-			default:
-				Sys.println(stackItem);
-		}
-	}
+        for (stackItem in callStack)
+        {
+            switch (stackItem)
+            {
+                case FilePos(s, file, line, column):
+                    errMsg += file + " (line " + line + ")\n";
+                default:
+                    Sys.println(stackItem);
+            }
+        }
 
         errMsg += e.error;
 
@@ -118,14 +116,14 @@ class SUtil
             FileSystem.createDirectory(SUtil.getPath() + "log");
         }
 
-        File.saveContent(SUtil.getPath() + path, errMsg + "\n");
+        sys.io.File.saveContent(SUtil.getPath() + path, errMsg + "\n");
+        
+        Sys.println(errMsg);
+        Sys.println("Crash dump saved in " + Path.normalize(path));
+        Sys.println("Making a simple alert ...");
 
-	Sys.println(errMsg);
-	Sys.println("Crash dump saved in " + Path.normalize(path));
-	Sys.println("Making a simple alert ...");
-		
-	SUtil.applicationAlert("Uncaught Error:", errMsg);
-	flash.system.System.exit(0);
+        SUtil.applicationAlert("Uncaught Error :(, The Call Stack: ", errMsg);
+        flash.system.System.exit(0);
     }
 	
     public static function applicationAlert(title:String, description:String){
@@ -137,9 +135,17 @@ class SUtil
             FileSystem.createDirectory(SUtil.getPath() + "system-saves");
         }
 
-        sys.io.File.saveContent(SUtil.getPath() + "system-saves" + fileName + fileExtension, fileData);
+        sys.io.File.saveContent(SUtil.getPath() + "system-saves/" + fileName + fileExtension, fileData);
         #if android
         SUtil.applicationAlert("Done Action: ", "File Saved Successfully!");
         #end
+    }
+
+    //THANKS SIROX
+    static public function copyContent(copyPath:String, savePath:String) {
+        if (!FileSystem.exists(savePath)){
+	    var bytes = OpenFlAssets.getBytes(copyPath);
+	    sys.io.File.saveBytes(savePath, bytes);
+        }
     }
 }
